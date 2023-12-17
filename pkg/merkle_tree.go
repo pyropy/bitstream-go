@@ -30,40 +30,38 @@ func (n *Node) GetHash() []byte {
 	return h.Sum(nil)
 }
 
-func NewTree(leaves [][]byte) *Node {
-	if len(leaves) == 0 {
+func NewNode(data []byte) *Node {
+	h := sha256.New()
+	h.Write(data)
+
+	return &Node{Data: data, Hash: h.Sum(nil)}
+}
+
+func NewTree(nodes []*Node) *Node {
+	if len(nodes) == 0 {
 		return &Node{Hash: make([]byte, 32)}
 	}
 
-	nodes := make([]Node, len(leaves))
-
-	for i, leaf := range leaves {
-		h := sha256.New()
-		h.Write(leaf)
-
-		nodes[i] = Node{Data: leaf, Hash: h.Sum(nil)}
-	}
-
 	for len(nodes) > 1 {
-		var newLevel []Node
+		var newLevel []*Node
 
 		for j := 0; j < len(nodes); j += 2 {
-			left := &nodes[j]
-			right := &nodes[j]
+			left := nodes[j]
+			right := nodes[j]
 
 			if j+1 < len(nodes) {
-				right = &nodes[j+1]
+				right = nodes[j+1]
 			}
 
 			h := sha256.New()
 			h.Write(left.Hash)
 			h.Write(right.Hash)
 
-			newLevel = append(newLevel, Node{Hash: h.Sum(nil), Left: left, Right: right})
+			newLevel = append(newLevel, &Node{Hash: h.Sum(nil), Left: left, Right: right})
 		}
 
 		nodes = newLevel
 	}
 
-	return &nodes[0]
+	return nodes[0]
 }
