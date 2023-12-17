@@ -7,7 +7,6 @@ type Hasher interface {
 }
 
 type Node struct {
-	Data  []byte
 	Hash  []byte
 	Left  *Node
 	Right *Node
@@ -34,7 +33,7 @@ func NewNode(data []byte) *Node {
 	h := sha256.New()
 	h.Write(data)
 
-	return &Node{Data: data, Hash: h.Sum(nil)}
+	return &Node{Hash: h.Sum(nil)}
 }
 
 func NewTree(nodes []*Node) *Node {

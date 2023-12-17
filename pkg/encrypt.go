@@ -39,8 +39,9 @@ func EncryptFile(preimage []byte, file *os.File, chunkSize int64) (io.ReadCloser
 		encryptedChunk := ChunkCipher(i, preimage, chunk)
 		b.Write(encryptedChunk)
 
-		node := NewNode(encryptedChunk)
-		nodes = append(nodes, node)
+		encNode := NewNode(encryptedChunk)
+		node := NewNode(chunk)
+		nodes = append(nodes, encNode, node)
 
 		i++
 	}
