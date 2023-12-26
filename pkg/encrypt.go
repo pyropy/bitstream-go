@@ -3,10 +3,9 @@ package bitstream
 import (
 	"bytes"
 	"io"
-	"os"
 )
 
-func EncryptFile(preimage []byte, file *os.File, chunkSize int64) (io.ReadCloser, *Node, error) {
+func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.ReadCloser, *Node, error) {
 	chunks, err := ChunkFile(file, chunkSize)
 	if err != nil {
 		return nil, nil, err
@@ -26,7 +25,7 @@ func EncryptFile(preimage []byte, file *os.File, chunkSize int64) (io.ReadCloser
 	)
 
 	for {
-		chunk := make([]byte, 32)
+		chunk := make([]byte, chunkSize)
 		n, err := chunks.Read(chunk)
 		if n == 0 {
 			if err == io.EOF {

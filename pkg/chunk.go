@@ -3,10 +3,9 @@ package bitstream
 import (
 	"bytes"
 	"io"
-	"os"
 )
 
-func ChunkFile(file *os.File, chunkSize int64) (io.ReadCloser, error) {
+func ChunkFile(file io.ReadSeeker, chunkSize int64) (io.ReadCloser, error) {
 	var (
 		b      bytes.Buffer
 		offset int64
