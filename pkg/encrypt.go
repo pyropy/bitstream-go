@@ -5,18 +5,25 @@ import (
 	"io"
 )
 
-func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.ReadCloser, *Node, error) {
+//func Encrypt(paymentHash []byte, preimage []byte, inFile io.ReadSeeker, outFile io.Writer, chunkSize int64) error {
+//	encrypted, tree, err := EncryptFile(preimage, inFile, chunkSize)
+//	if err != nil {
+//		return err
+//	}
+//
+//	encryptedRoot := tree.GetHash()
+//	// TODO: Compute Schnorr signature from message
+//	message := append(encryptedRoot, paymentHash...)
+//
+//	outFile.Write(paymentHash)
+//
+//}
+
+func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, *MerkleTree, error) {
 	chunks, err := ChunkFile(file, chunkSize)
 	if err != nil {
 		return nil, nil, err
 	}
-
-	defer func() {
-		err = chunks.Close()
-		if err != nil {
-			panic(err)
-		}
-	}()
 
 	var (
 		i     uint64
@@ -46,5 +53,5 @@ func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.ReadC
 	}
 
 	tree := NewTree(nodes)
-	return io.NopCloser(&b), tree, nil
+	return &b, tree, nil
 }

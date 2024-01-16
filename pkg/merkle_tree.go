@@ -1,15 +1,31 @@
 package bitstream
 
-import "crypto/sha256"
+import (
+	"crypto/sha256"
+)
 
 type Hasher interface {
 	GetHash() []byte
+}
+
+type MerkleTree struct {
+	Root *Node
+}
+
+func (t *MerkleTree) GetHash() []byte {
+	return t.Root.GetHash()
 }
 
 type Node struct {
 	Hash  []byte
 	Left  *Node
 	Right *Node
+}
+
+type MerkleProof struct {
+	Root  []byte
+	Bloom []uint8
+	Path  [][]byte
 }
 
 func (n *Node) GetHash() []byte {
@@ -36,31 +52,85 @@ func NewNode(data []byte) *Node {
 	return &Node{Hash: h.Sum(nil)}
 }
 
-func NewTree(nodes []*Node) *Node {
-	if len(nodes) == 0 {
-		return &Node{Hash: make([]byte, 32)}
+func NewTree(leaves []*Node) *MerkleTree {
+	if len(leaves) == 0 {
+		return &MerkleTree{
+			Root: &Node{
+				Hash: make([]byte, 32),
+			},
+		}
 	}
 
-	for len(nodes) > 1 {
-		var newLevel []*Node
+	if len(leaves)%2 != 0 {
+		leaf := leaves[len(leaves)-1]
+		leaves = append(leaves, leaf)
+	}
 
-		for j := 0; j < len(nodes); j += 2 {
-			left := nodes[j]
-			right := nodes[j]
+	for len(leaves) > 1 {
+		var nextLevel []*Node
 
-			if j+1 < len(nodes) {
-				right = nodes[j+1]
-			}
+		// go through all leaves on current level in pairs
+		for i := 0; i < len(leaves); i += 2 {
+			left := leaves[i]
+			right := leaves[i+1]
 
-			h := sha256.New()
-			h.Write(left.Hash)
-			h.Write(right.Hash)
+			// create parent node
+			parent := newParentNode(left, right)
 
-			newLevel = append(newLevel, &Node{Hash: h.Sum(nil), Left: left, Right: right})
+			// append parent to next level
+			nextLevel = append(nextLevel, parent)
 		}
 
-		nodes = newLevel
+		leaves = nextLevel
 	}
 
-	return nodes[0]
+	return &MerkleTree{Root: leaves[0]}
+}
+
+func GenerateMerkleProof(leaves []*Node, index int) *MerkleProof {
+	var path [][]byte
+
+	if len(leaves)%2 != 0 {
+		leaf := leaves[len(leaves)-1]
+		leaves = append(leaves, leaf)
+	}
+
+	for len(leaves) > 1 {
+		var nextLevel []*Node
+
+		// go through all leaves on current level in pairs
+		for i := 0; i < len(leaves); i += 2 {
+			left := leaves[i]
+			right := leaves[i+1]
+
+			// create parent node
+			parent := newParentNode(left, right)
+
+			// append parent to next level
+			nextLevel = append(nextLevel, parent)
+
+			if i <= index && index < i+2 {
+				if index%2 == 0 {
+					path = append(path, right.GetHash())
+				} else {
+					path = append(path, left.GetHash())
+				}
+
+				index = i / 2
+			}
+		}
+
+		leaves = nextLevel
+	}
+
+	return &MerkleProof{Path: path, Root: leaves[0].GetHash()}
+}
+
+func newParentNode(left, right *Node) *Node {
+	// generate parent hash
+	h := sha256.New()
+	h.Write(left.Hash)
+	h.Write(right.Hash)
+
+	return &Node{Hash: h.Sum(nil), Left: left, Right: right}
 }

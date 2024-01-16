@@ -5,7 +5,7 @@ import (
 	"io"
 )
 
-func ChunkFile(file io.ReadSeeker, chunkSize int64) (io.ReadCloser, error) {
+func ChunkFile(file io.ReadSeeker, chunkSize int64) (io.Reader, error) {
 	var (
 		b      bytes.Buffer
 		offset int64
@@ -31,5 +31,5 @@ func ChunkFile(file io.ReadSeeker, chunkSize int64) (io.ReadCloser, error) {
 		offset += chunkSize
 	}
 
-	return io.NopCloser(&b), nil
+	return &b, nil
 }
