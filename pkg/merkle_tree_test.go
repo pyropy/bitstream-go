@@ -27,14 +27,14 @@ func TestTree(t *testing.T) {
 			leaves: []*Node{
 				NewNode([]byte("world")),
 			},
-			expect: "486ea46224d1bb4fb680f34f7c9ad96a8f24ec88be73ea8e5a6c65260e9cb8a7",
+			expect: "a9e049081e9eaeef2d30029031314c888955d7181a032c29b11633ac11d6076c",
 		},
 		{
 			leaves: []*Node{
 				NewNode([]byte("hello")),
 				NewNode([]byte("world")),
 			},
-			expect: "a9e049081e9eaeef2d30029031314c888955d7181a032c29b11633ac11d6076c",
+			expect: "7305db9b2abccd706c256db3d97e5ff48d677cfe4d3a5904afb7da0e3950e1e2",
 		},
 		{
 			leaves: []*Node{
