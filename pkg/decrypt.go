@@ -7,76 +7,75 @@ import (
 	"io"
 )
 
-func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, error) {
+// Decrypt tries to decrypt file with given preimage and returns io.Reader of decrypted file.
+//
+// In case of an error, decrypt returns chunk index alongisde the error.
+//
+// If chunk index is not -1, then error ocurred while decrypting the chunk
+// hence proof for given chunk should be generated.
+func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int) (io.Reader, int, error) {
 	var out bytes.Buffer
 
-	sig := make([]byte, 64, 64)
-	paymentHash := make([]byte, 32, 32)
-
-	_, err := file.Read(sig)
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = file.Read(paymentHash)
-	if err != nil {
-		return nil, err
-	}
+	expectedHash := make([]byte, HashSize)
+	encryptedChunk := make([]byte, chunkSize)
 
 	var (
 		i      uint64
-		offset int64 = 96 // offset at sig + paymentHash bytes len
+		offset int64 = 96 // offset at sig len (64) + paymentHash len (32)
 	)
 
 	for {
-		// read expected hash first
 		_, err := file.Seek(offset, 0)
 		if err != nil {
-			return nil, err
+			return nil, -1, err
 		}
 
-		expectedHash := make([]byte, chunkSize)
+		// read expected hash from file
 		n, err := file.Read(expectedHash)
 		if n == 0 {
 			if err == io.EOF {
 				break
 			}
 
-			return nil, err
+			return nil, -1, err
 		}
 
-		offset += chunkSize // set offset to read chunk
-
+		// update offset for chunk read
+		offset += int64(chunkSize)
 		_, err = file.Seek(offset, 0)
 		if err != nil {
-			return nil, err
+			return nil, -1, err
 		}
 
-		encryptedChunk := make([]byte, chunkSize)
+		// read chunk
 		n, err = file.Read(encryptedChunk)
 		if n == 0 {
 			if err == io.EOF {
 				break
 			}
 
-			return nil, err
+			return nil, -1, err
 		}
 
-		offset += chunkSize // TODO: use constant hash size to adjust next offset
+		// update offset for next expected hash read
+		offset += int64(chunkSize)
 
+		// decrypt chunk, compute hash and if hashes match
 		decryptedChunk := ChunkCipher(i, preimage, encryptedChunk)
 		h := sha256.New()
 		h.Write(decryptedChunk)
 		hash := h.Sum(nil)
 
-		if bytes.Compare(expectedHash, hash) != 0 {
-			// TODO: Compute merkle proof
-			return nil, fmt.Errorf("failed to decrypt file")
+		if !bytes.Equal(expectedHash, hash) {
+			return nil, int(i), fmt.Errorf("failed to decrypt file")
 		}
 
 		out.Write(decryptedChunk)
+		clear(expectedHash)
+		clear(encryptedChunk)
+
 		i++
 	}
 
-	return nil, nil
+	return nil, 0, nil
 }

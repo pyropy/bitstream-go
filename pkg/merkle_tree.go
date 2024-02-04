@@ -52,6 +52,10 @@ func NewNode(data []byte) *Node {
 	return &Node{Hash: h.Sum(nil)}
 }
 
+func NewNodeFromHash(hash []byte) *Node {
+	return &Node{Hash: hash}
+}
+
 func NewTree(leaves []*Node) *MerkleTree {
 	if len(leaves) == 0 {
 		return &MerkleTree{
