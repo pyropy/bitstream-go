@@ -3,9 +3,10 @@ package bitstream
 import (
 	"bytes"
 	"fmt"
+	"io"
+
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/btcsuite/btcd/btcec/v2/schnorr"
-	"io"
 )
 
 type EncryptedFile interface {
@@ -13,18 +14,17 @@ type EncryptedFile interface {
 	io.Reader
 }
 
-func Encrypt(pk *btcec.PrivateKey, paymentHash []byte, preimage []byte, inFile io.ReadSeeker, outFile io.Writer, chunkSize int64) error {
+func Encrypt(pk *btcec.PrivateKey, paymentHash, preimage []byte, inFile io.ReadSeeker, outFile io.Writer, chunkSize int64) error {
 	encrypted, tree, err := EncryptFile(preimage, inFile, chunkSize)
 	if err != nil {
 		return err
 	}
 
 	encryptedRoot := tree.GetHash()
-	message := append(encryptedRoot, paymentHash...)
-
-	sig, err := schnorr.Sign(pk, message)
+	// original implementation signs encrypted root + payment hash
+	sig, err := schnorr.Sign(pk, encryptedRoot)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to generate schorr sig: %w", err)
 	}
 
 	_, err = outFile.Write(sig.Serialize())

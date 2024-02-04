@@ -8,12 +8,12 @@ const (
 )
 
 type Proof struct {
-	sig         []byte
-	paymentHash []byte
-	merkleProof *MerkleProof
+	Sig         []byte
+	PaymentHash []byte
+	MerkleProof *MerkleProof
 }
 
-func GenerateProof(file io.ReadSeeker, chunkSize int, chunkIndex int) (*Proof, error) {
+func GenerateProof(file io.ReadSeeker, chunkSize int64, chunkIndex int) (*Proof, error) {
 	sig := make([]byte, SignatureSize)
 	paymentHash := make([]byte, HashSize)
 	hash := make([]byte, chunkSize)
@@ -53,7 +53,7 @@ func GenerateProof(file io.ReadSeeker, chunkSize int, chunkIndex int) (*Proof, e
 		}
 
 		// update offset for next chunk hash read
-		offset += int64(chunkSize * 2)
+		offset += chunkSize * 2
 		node := NewNodeFromHash(hash)
 		leaves = append(leaves, node)
 
@@ -64,8 +64,8 @@ func GenerateProof(file io.ReadSeeker, chunkSize int, chunkIndex int) (*Proof, e
 	merkleProof := GenerateMerkleProof(leaves, chunkIndex)
 
 	return &Proof{
-		sig:         sig,
-		paymentHash: paymentHash,
-		merkleProof: merkleProof,
+		Sig:         sig,
+		PaymentHash: paymentHash,
+		MerkleProof: merkleProof,
 	}, nil
 }

@@ -23,9 +23,8 @@ type Node struct {
 }
 
 type MerkleProof struct {
-	Root  []byte
-	Bloom []uint8
-	Path  [][]byte
+	Root []byte
+	Path [][]byte
 }
 
 func (n *Node) GetHash() []byte {
@@ -65,13 +64,13 @@ func NewTree(leaves []*Node) *MerkleTree {
 		}
 	}
 
-	if len(leaves)%2 != 0 {
-		leaf := leaves[len(leaves)-1]
-		leaves = append(leaves, leaf)
-	}
-
 	for len(leaves) > 1 {
 		var nextLevel []*Node
+
+		if len(leaves)%2 != 0 {
+			leaf := leaves[len(leaves)-1]
+			leaves = append(leaves, leaf)
+		}
 
 		// go through all leaves on current level in pairs
 		for i := 0; i < len(leaves); i += 2 {
@@ -94,13 +93,13 @@ func NewTree(leaves []*Node) *MerkleTree {
 func GenerateMerkleProof(leaves []*Node, index int) *MerkleProof {
 	var path [][]byte
 
-	if len(leaves)%2 != 0 {
-		leaf := leaves[len(leaves)-1]
-		leaves = append(leaves, leaf)
-	}
-
 	for len(leaves) > 1 {
 		var nextLevel []*Node
+
+		if len(leaves)%2 != 0 {
+			leaf := leaves[len(leaves)-1]
+			leaves = append(leaves, leaf)
+		}
 
 		// go through all leaves on current level in pairs
 		for i := 0; i < len(leaves); i += 2 {

@@ -11,7 +11,8 @@ func ChunkCipher(index uint64, preimage []byte, data []byte) []byte {
 
 	// add 1 to index
 	index += 1
-	// convert index to bytes
+
+	// convert index to bytes (original implementation uses btc specific encoding)
 	indexBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(indexBytes, index)
 

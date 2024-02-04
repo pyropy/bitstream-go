@@ -13,7 +13,7 @@ import (
 //
 // If chunk index is not -1, then error ocurred while decrypting the chunk
 // hence proof for given chunk should be generated.
-func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int) (io.Reader, int, error) {
+func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, int, error) {
 	var out bytes.Buffer
 
 	expectedHash := make([]byte, HashSize)
@@ -41,7 +41,7 @@ func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int) (io.Reader, int
 		}
 
 		// update offset for chunk read
-		offset += int64(chunkSize)
+		offset += chunkSize
 		_, err = file.Seek(offset, 0)
 		if err != nil {
 			return nil, -1, err
@@ -58,7 +58,7 @@ func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int) (io.Reader, int
 		}
 
 		// update offset for next expected hash read
-		offset += int64(chunkSize)
+		offset += chunkSize
 
 		// decrypt chunk, compute hash and if hashes match
 		decryptedChunk := ChunkCipher(i, preimage, encryptedChunk)
