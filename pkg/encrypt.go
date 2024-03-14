@@ -2,6 +2,7 @@ package bitstream
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"fmt"
 	"io"
 
@@ -32,7 +33,9 @@ func Encrypt(pk *btcec.PrivateKey, paymentHash, preimage []byte, inFile io.ReadS
 		return fmt.Errorf("failed to write schnorr sig: %w", err)
 	}
 
-	_, err = outFile.Write(paymentHash)
+	var paymentHashFixed [32]byte
+	copy(paymentHashFixed[:], paymentHash)
+	_, err = outFile.Write(paymentHashFixed[:])
 	if err != nil {
 		return fmt.Errorf("failed to write payment hash: %w", err)
 	}
@@ -68,7 +71,13 @@ func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (Encrypte
 			return nil, nil, err
 		}
 
+		h := sha256.New()
+		h.Write(chunk)
+		hash := h.Sum(nil)
+
 		encryptedChunk := ChunkCipher(i, preimage, chunk)
+
+		b.Write(hash)
 		b.Write(encryptedChunk)
 
 		encNode := NewNode(encryptedChunk)

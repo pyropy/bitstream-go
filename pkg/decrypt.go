@@ -9,9 +9,9 @@ import (
 
 // Decrypt tries to decrypt file with given preimage and returns io.Reader of decrypted file.
 //
-// In case of an error, decrypt returns chunk index alongisde the error.
+// In case of an error, decrypt returns chunk index alongside the error.
 //
-// If chunk index is not -1, then error ocurred while decrypting the chunk
+// If chunk index is not -1, then error occurred while decrypting the chunk
 // hence proof for given chunk should be generated.
 func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, int, error) {
 	var out bytes.Buffer
@@ -65,9 +65,8 @@ func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, i
 		h := sha256.New()
 		h.Write(decryptedChunk)
 		hash := h.Sum(nil)
-
 		if !bytes.Equal(expectedHash, hash) {
-			return nil, int(i), fmt.Errorf("failed to decrypt file")
+			return nil, int(i), fmt.Errorf("failed to decrypt chunk %d. expected %x got %x", i, expectedHash, hash)
 		}
 
 		out.Write(decryptedChunk)
@@ -77,5 +76,5 @@ func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, i
 		i++
 	}
 
-	return nil, 0, nil
+	return io.Reader(&out), 0, nil
 }

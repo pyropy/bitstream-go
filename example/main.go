@@ -109,7 +109,7 @@ func decrypt(inPath, outPath, preimage string, chunkSize int64) error {
 			}
 
 			root := fmt.Sprintf("%x", proof.MerkleProof.Root)
-			log.Println("Generated proof", "proof root", root)
+			log.Println("Generated proof", "root", root)
 		}
 
 		return err
