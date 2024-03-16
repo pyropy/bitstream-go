@@ -76,5 +76,5 @@ func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, i
 		i++
 	}
 
-	return io.Reader(&out), 0, nil
+	return &out, 0, nil
 }
