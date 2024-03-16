@@ -60,6 +60,7 @@ func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (Encrypte
 		nodes []*Node
 	)
 
+	h := sha256.New()
 	for {
 		chunk := make([]byte, chunkSize)
 		n, err := chunks.Read(chunk)
@@ -71,7 +72,7 @@ func EncryptFile(preimage []byte, file io.ReadSeeker, chunkSize int64) (Encrypte
 			return nil, nil, err
 		}
 
-		h := sha256.New()
+		h.Reset()
 		h.Write(chunk)
 		hash := h.Sum(nil)
 

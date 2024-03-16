@@ -13,8 +13,16 @@ import (
 //
 // If chunk index is not -1, then error occurred while decrypting the chunk
 // hence proof for given chunk should be generated.
-func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, int, error) {
+func Decrypt(paymentHash []byte, preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, int, error) {
 	var out bytes.Buffer
+	h := sha256.New()
+	h.Write(preimage)
+	preimageHash := h.Sum(nil)
+
+	// check if preimage hash matches payment hash
+	if !bytes.Equal(preimageHash, paymentHash) {
+		return nil, -1, fmt.Errorf("preimage hash does not match payment hash. expected %x got %x", paymentHash, preimageHash)
+	}
 
 	expectedHash := make([]byte, HashSize)
 	encryptedChunk := make([]byte, chunkSize)
@@ -62,7 +70,7 @@ func Decrypt(preimage []byte, file io.ReadSeeker, chunkSize int64) (io.Reader, i
 
 		// decrypt chunk, compute hash and if hashes match
 		decryptedChunk := ChunkCipher(i, preimage, encryptedChunk)
-		h := sha256.New()
+		h.Reset()
 		h.Write(decryptedChunk)
 		hash := h.Sum(nil)
 		if !bytes.Equal(expectedHash, hash) {
