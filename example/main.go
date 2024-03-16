@@ -100,7 +100,12 @@ func decrypt(inPath, outPath, preimage string, chunkSize int64) error {
 		return err
 	}
 
-	decryptedFile, index, err := bitstream.Decrypt(preimageBytes, f, chunkSize)
+	paymentHashBytes, err := hex.DecodeString(paymentHash)
+	if err != nil {
+		return err
+	}
+
+	decryptedFile, index, err := bitstream.Decrypt(paymentHashBytes, preimageBytes, f, chunkSize)
 	if err != nil {
 		if index != -1 {
 			proof, err := bitstream.GenerateProof(f, chunkSize, 2*index)
